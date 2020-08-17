@@ -17,13 +17,13 @@ const Segment = xray.Segment
 
 var TestUtils = {}
 
-TestUtils.TestEmitter = function TestEmitter() {
+TestUtils.TestEmitter = function TestEmitter () {
   EventEmitter.call(this)
 }
 
 util.inherits(TestUtils.TestEmitter, EventEmitter)
 
-TestUtils.onEvent = function onEvent(event, fcn) {
+TestUtils.onEvent = function onEvent (event, fcn) {
   this.emitter.on(event, fcn.bind(this))
   return this
 }
@@ -34,7 +34,7 @@ const parentId = '2c7ad569f5d6ff149137be86'
 const traceId = '1-f9194208-2c7ad569f5d6ff149137be86'
 let newSegmentSpy, addReqDataSpy, processHeadersStub, resolveNameStub
 
-function register() {
+function register () {
   const fastify = Fastify()
   fastify.addHook('onRequest', (request, reply, done) => {
     request.raw.emitter = new TestUtils.TestEmitter()

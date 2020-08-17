@@ -1,9 +1,9 @@
 language: node_js
 
 node_js:
-  - "lts/*"
   - "10"
-  - "nodejs"
+  - "lts/*"
+  - "node"
 
 script:
   - npm run lint-ci
