@@ -1,0 +1,46 @@
+{
+  "name": "fastify-xray",
+  "version": "1.0.0",
+  "description": "Plugin for fastify for AWS XRay recording",
+  "main": "plugin.js",
+  "types": "plugin.d.ts",
+  "scripts": {
+    "test": "tap test/*.test.js && npm run typescript",
+    "test-ci": "tap --cov test/*.test.js && npm run typescript",
+    "lint": "standard | snazzy",
+    "lint-ci": "standard",
+    "typescript": "tsc --project ./tsconfig.json"
+  },
+  "precommit": [
+    "lint",
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jeromemacias/fastify-xray.git"
+  },
+  "keywords": [
+    "fastify",
+    "cookie"
+  ],
+  "author": "Jérôme Macias <jerome.macias@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jeromemacias/fastify-xray/issues"
+  },
+  "homepage": "https://github.com/jeromemacias/fastify-xray#readme",
+  "devDependencies": {
+    "@types/node": "^11.9.3",
+    "fastify": "^2.0.0",
+    "pre-commit": "^1.2.2",
+    "sinon": "~9.0.2",
+    "snazzy": "^8.0.0",
+    "standard": "^12.0.1",
+    "tap": "^12.5.2",
+    "typescript": "^3.3.1"
+  },
+  "dependencies": {
+    "aws-xray-sdk-core": "^3.1.0",
+    "fastify-plugin": "^1.6.1"
+  }
+}
