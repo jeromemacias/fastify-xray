@@ -20,10 +20,7 @@ const segment = AWSXRay.getSegment();
 In manual mode, you can get the base segment off of the request object:
 
 ```js
-const segment = req.segment;
-
-// If the restify context plugin is being used, it is placed under 'XRaySegment'
-const segment = request.XRaySegment;
+const segment = request.segment;
 ```
 
 This plugin should be register as soon as possible after fastify initialisation.
@@ -56,7 +53,7 @@ fastify.register(require("fastify-xray"), {
 //...
 
 fastify.get("/", async function (request, reply) {
-  const segment = request.XRaySegment;
+  const segment = request.segment;
 
   //...
 
