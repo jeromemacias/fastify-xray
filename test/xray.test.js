@@ -32,7 +32,7 @@ const defaultName = 'defaultName'
 const hostName = 'expressMiddlewareTest'
 const parentId = '2c7ad569f5d6ff149137be86'
 const traceId = '1-f9194208-2c7ad569f5d6ff149137be86'
-let newSegmentSpy, addReqDataSpy, addThrottleFlagSpy, addErrorSpy, processHeadersStub, resolveNameStub
+let newSegmentSpy, addReqDataSpy, addThrottleFlagSpy, addErrorSpy, segmentCloseSpy, processHeadersStub, resolveNameStub, segmentHttpCloseSpy
 
 function register () {
   const fastify = Fastify()
@@ -86,6 +86,8 @@ test('should initialized correctly', (t) => {
     addReqDataSpy = sinon.spy(Segment.prototype, 'addIncomingRequestData')
     addThrottleFlagSpy = sinon.spy(Segment.prototype, 'addThrottleFlag')
     addErrorSpy = sinon.spy(Segment.prototype, 'addError')
+    segmentCloseSpy = sinon.spy(Segment.prototype, 'close')
+    segmentHttpCloseSpy = sinon.spy(IncomingRequestData.prototype, 'close')
 
     processHeadersStub = sinon
       .stub(mwUtils, 'processHeaders')
@@ -103,7 +105,7 @@ test('should initialized correctly', (t) => {
   })
 
   t.test('success tracing', (st) => {
-    st.plan(9)
+    st.plan(11)
 
     const fastify = register()
 
@@ -131,6 +133,8 @@ test('should initialized correctly', (t) => {
         st.ok(newSegmentSpy.calledOnce)
         st.ok(newSegmentSpy.calledWithExactly(defaultName, traceId, parentId))
         st.ok(processHeadersStub.calledWithExactly(res.raw.req))
+        st.ok(segmentHttpCloseSpy.calledOnce)
+        st.ok(segmentCloseSpy.calledOnce)
 
         st.ok(addErrorSpy.notCalled)
       }
@@ -138,7 +142,7 @@ test('should initialized correctly', (t) => {
   })
 
   t.test('error tracing', (st) => {
-    st.plan(3)
+    st.plan(5)
 
     const error = new Error('route error')
     const fastify = register()
@@ -159,14 +163,16 @@ test('should initialized correctly', (t) => {
       (err, res) => {
         st.error(err)
 
-        st.ok(getCauseStub.calledWith(500))
         st.ok(addErrorSpy.calledWithExactly(error))
+        st.ok(getCauseStub.calledWith(500))
+        st.ok(segmentHttpCloseSpy.calledOnce)
+        st.ok(segmentCloseSpy.calledOnce)
       }
     )
   })
 
   t.test('throttle flag', (st) => {
-    st.plan(2)
+    st.plan(4)
 
     const fastify = register()
 
@@ -185,6 +191,8 @@ test('should initialized correctly', (t) => {
         st.error(err)
 
         st.ok(addThrottleFlagSpy.calledOnce)
+        st.ok(segmentHttpCloseSpy.calledOnce)
+        st.ok(segmentCloseSpy.calledOnce)
       }
     )
   })

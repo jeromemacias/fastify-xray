@@ -77,9 +77,13 @@ function fastifyXrayOnResponse (request, reply, done) {
     return done()
   }
 
-  if (reply.statusCode === 429) segment.addThrottleFlag()
-  if (AWSXRay.utils.getCauseTypeFromHttpStatus(reply.statusCode)) {
-    segment[AWSXRay.utils.getCauseTypeFromHttpStatus(reply.statusCode)] = true
+  if (reply.statusCode === 429) {
+    segment.addThrottleFlag()
+  }
+
+  const cause = AWSXRay.utils.getCauseTypeFromHttpStatus(reply.statusCode)
+  if (cause) {
+    segment[cause] = true
   }
 
   if (segment.http && reply.res) {
