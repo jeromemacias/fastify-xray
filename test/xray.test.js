@@ -12,7 +12,7 @@ const SegmentEmitter = require('aws-xray-sdk-core/lib/segment_emitter')
 const ServiceConnector = require('aws-xray-sdk-core/lib/middleware/sampling/service_connector')
 
 const mwUtils = xray.middleware
-// const IncomingRequestData = xray.middleware.IncomingRequestData
+const IncomingRequestData = xray.middleware.IncomingRequestData
 const Segment = xray.Segment
 
 var TestUtils = {}
@@ -32,7 +32,7 @@ const defaultName = 'defaultName'
 const hostName = 'expressMiddlewareTest'
 const parentId = '2c7ad569f5d6ff149137be86'
 const traceId = '1-f9194208-2c7ad569f5d6ff149137be86'
-let newSegmentSpy, addReqDataSpy, processHeadersStub, resolveNameStub
+let newSegmentSpy, addReqDataSpy, addThrottleFlagSpy, addErrorSpy, processHeadersStub, resolveNameStub
 
 function register () {
   const fastify = Fastify()
@@ -75,7 +75,7 @@ test('should throw error if defaultName option is missing', async (t) => {
 })
 
 test('should initialized correctly', (t) => {
-  t.plan(2)
+  t.plan(3)
 
   t.beforeEach((done) => {
     // sinon.stub(xray, "isAutomaticMode").returns(false);
@@ -84,6 +84,8 @@ test('should initialized correctly', (t) => {
 
     newSegmentSpy = sinon.spy(Segment.prototype, 'init')
     addReqDataSpy = sinon.spy(Segment.prototype, 'addIncomingRequestData')
+    addThrottleFlagSpy = sinon.spy(Segment.prototype, 'addThrottleFlag')
+    addErrorSpy = sinon.spy(Segment.prototype, 'addError')
 
     processHeadersStub = sinon
       .stub(mwUtils, 'processHeaders')
@@ -101,7 +103,7 @@ test('should initialized correctly', (t) => {
   })
 
   t.test('success tracing', (st) => {
-    st.plan(6)
+    st.plan(9)
 
     const fastify = register()
 
@@ -120,26 +122,58 @@ test('should initialized correctly', (t) => {
         st.error(err)
 
         st.ok(processHeadersStub.calledOnce)
+
         st.ok(addReqDataSpy.calledOnce)
+        st.ok(addReqDataSpy.calledWithExactly(sinon.match.instanceOf(IncomingRequestData)))
 
         st.ok(resolveNameStub.calledOnce)
 
         st.ok(newSegmentSpy.calledOnce)
         st.ok(newSegmentSpy.calledWithExactly(defaultName, traceId, parentId))
-        // st.ok(processHeadersStub.calledWithExactly(res));
+        st.ok(processHeadersStub.calledWithExactly(res.raw.req))
+
+        st.ok(addErrorSpy.notCalled)
       }
     )
   })
 
   t.test('error tracing', (st) => {
-    st.plan(1)
+    st.plan(3)
 
+    const error = new Error('route error')
     const fastify = register()
 
     fastify.get('/', (request) => {
       request.segment.addMetadata('test', 'data')
 
-      return Promise.reject(new Error('route error'))
+      return Promise.reject(error)
+    })
+
+    const getCauseStub = sinon.stub(xray.utils, 'getCauseTypeFromHttpStatus').returns('fault')
+
+    fastify.inject(
+      {
+        method: 'GET',
+        url: '/'
+      },
+      (err, res) => {
+        st.error(err)
+
+        st.ok(getCauseStub.calledWith(500))
+        st.ok(addErrorSpy.calledWithExactly(error))
+      }
+    )
+  })
+
+  t.test('throttle flag', (st) => {
+    st.plan(2)
+
+    const fastify = register()
+
+    fastify.get('/', (request, reply) => {
+      reply.code(429)
+
+      return Promise.resolve({})
     })
 
     fastify.inject(
@@ -149,6 +183,8 @@ test('should initialized correctly', (t) => {
       },
       (err, res) => {
         st.error(err)
+
+        st.ok(addThrottleFlagSpy.calledOnce)
       }
     )
   })
