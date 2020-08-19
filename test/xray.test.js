@@ -34,7 +34,7 @@ const parentId = '2c7ad569f5d6ff149137be86'
 const traceId = '1-f9194208-2c7ad569f5d6ff149137be86'
 let newSegmentSpy, addReqDataSpy, addThrottleFlagSpy, addErrorSpy, segmentCloseSpy, processHeadersStub, resolveNameStub, segmentHttpCloseSpy, setSegmentSpy
 
-function register () {
+function register (AWSXRay, giveInstanceAs) {
   const fastify = Fastify()
   fastify.addHook('onRequest', (request, reply, done) => {
     request.raw.emitter = new TestUtils.TestEmitter()
@@ -47,8 +47,13 @@ function register () {
     done()
   })
 
+  if (AWSXRay && giveInstanceAs === 'decorator') {
+    fastify.decorate('AWSXRay', xray)
+  }
+
   fastify.register(plugin, {
-    defaultName: 'Test app'
+    defaultName: 'Test app',
+    AWSXRay: AWSXRay && giveInstanceAs === 'option' ? AWSXRay : undefined
   })
 
   return fastify
@@ -75,7 +80,7 @@ test('should throw error if defaultName option is missing', async (t) => {
 })
 
 test('should initialized correctly', (t) => {
-  t.plan(4)
+  t.plan(6)
 
   t.beforeEach((done) => {
     sinon.stub(SegmentEmitter)
@@ -239,6 +244,58 @@ test('should initialized correctly', (t) => {
 
         st.ok(addThrottleFlagSpy.calledOnce)
         st.ok(segmentHttpCloseSpy.calledOnce)
+        st.ok(segmentCloseSpy.calledOnce)
+      }
+    )
+  })
+
+  t.test('success tracing with custom AWSXRay as option', (st) => {
+    st.plan(2)
+
+    sinon.stub(xray, 'isAutomaticMode').returns(true)
+
+    const fastify = register(xray, 'option')
+
+    fastify.get('/', (request) => {
+      xray.getSegment().addMetadata('test', 'data')
+
+      return Promise.resolve({})
+    })
+
+    fastify.inject(
+      {
+        method: 'GET',
+        url: '/'
+      },
+      (err, res) => {
+        st.error(err)
+
+        st.ok(segmentCloseSpy.calledOnce)
+      }
+    )
+  })
+
+  t.test('success tracing with custom AWSXRay using fastify instance decorator', (st) => {
+    st.plan(2)
+
+    sinon.stub(xray, 'isAutomaticMode').returns(true)
+
+    const fastify = register(xray, 'decorator')
+
+    fastify.get('/', (request) => {
+      xray.getSegment().addMetadata('test', 'data')
+
+      return Promise.resolve({})
+    })
+
+    fastify.inject(
+      {
+        method: 'GET',
+        url: '/'
+      },
+      (err, res) => {
+        st.error(err)
+
         st.ok(segmentCloseSpy.calledOnce)
       }
     )
