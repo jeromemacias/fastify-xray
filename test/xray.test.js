@@ -32,7 +32,7 @@ const defaultName = 'defaultName'
 const hostName = 'expressMiddlewareTest'
 const parentId = '2c7ad569f5d6ff149137be86'
 const traceId = '1-f9194208-2c7ad569f5d6ff149137be86'
-let newSegmentSpy, addReqDataSpy, addThrottleFlagSpy, addErrorSpy, segmentCloseSpy, processHeadersStub, resolveNameStub, segmentHttpCloseSpy
+let newSegmentSpy, addReqDataSpy, addThrottleFlagSpy, addErrorSpy, segmentCloseSpy, processHeadersStub, resolveNameStub, segmentHttpCloseSpy, setSegmentSpy
 
 function register () {
   const fastify = Fastify()
@@ -75,12 +75,13 @@ test('should throw error if defaultName option is missing', async (t) => {
 })
 
 test('should initialized correctly', (t) => {
-  t.plan(3)
+  t.plan(4)
 
   t.beforeEach((done) => {
-    // sinon.stub(xray, "isAutomaticMode").returns(false);
     sinon.stub(SegmentEmitter)
     sinon.stub(ServiceConnector)
+
+    setSegmentSpy = sinon.spy(xray, 'setSegment')
 
     newSegmentSpy = sinon.spy(Segment.prototype, 'init')
     addReqDataSpy = sinon.spy(Segment.prototype, 'addIncomingRequestData')
@@ -104,8 +105,52 @@ test('should initialized correctly', (t) => {
     done()
   })
 
-  t.test('success tracing', (st) => {
-    st.plan(11)
+  t.test('success tracing in automatic mode', (st) => {
+    st.plan(12)
+
+    sinon.stub(xray, 'isAutomaticMode').returns(true)
+
+    const fastify = register()
+
+    fastify.get('/', (request) => {
+      xray.getSegment().addMetadata('test', 'data')
+
+      return Promise.resolve({})
+    })
+
+    fastify.inject(
+      {
+        method: 'GET',
+        url: '/'
+      },
+      (err, res) => {
+        st.error(err)
+
+        st.ok(processHeadersStub.calledOnce)
+
+        st.ok(addReqDataSpy.calledOnce)
+        st.ok(addReqDataSpy.calledWithExactly(sinon.match.instanceOf(IncomingRequestData)))
+
+        st.ok(resolveNameStub.calledOnce)
+
+        st.ok(newSegmentSpy.calledOnce)
+        st.ok(newSegmentSpy.calledWithExactly(defaultName, traceId, parentId))
+
+        st.ok(setSegmentSpy.calledOnce)
+
+        st.ok(processHeadersStub.calledWithExactly(res.raw.req))
+        st.ok(segmentHttpCloseSpy.calledOnce)
+        st.ok(segmentCloseSpy.calledOnce)
+
+        st.ok(addErrorSpy.notCalled)
+      }
+    )
+  })
+
+  t.test('segment available in request in manual mode', (st) => {
+    st.plan(9)
+
+    sinon.stub(xray, 'isAutomaticMode').returns(false)
 
     const fastify = register()
 
@@ -132,10 +177,8 @@ test('should initialized correctly', (t) => {
 
         st.ok(newSegmentSpy.calledOnce)
         st.ok(newSegmentSpy.calledWithExactly(defaultName, traceId, parentId))
-        st.ok(processHeadersStub.calledWithExactly(res.raw.req))
-        st.ok(segmentHttpCloseSpy.calledOnce)
-        st.ok(segmentCloseSpy.calledOnce)
 
+        st.ok(setSegmentSpy.notCalled)
         st.ok(addErrorSpy.notCalled)
       }
     )
@@ -144,11 +187,13 @@ test('should initialized correctly', (t) => {
   t.test('error tracing', (st) => {
     st.plan(5)
 
+    sinon.stub(xray, 'isAutomaticMode').returns(true)
+
     const error = new Error('route error')
     const fastify = register()
 
     fastify.get('/', (request) => {
-      request.segment.addMetadata('test', 'data')
+      xray.getSegment().addMetadata('test', 'data')
 
       return Promise.reject(error)
     })
@@ -173,6 +218,8 @@ test('should initialized correctly', (t) => {
 
   t.test('throttle flag', (st) => {
     st.plan(4)
+
+    sinon.stub(xray, 'isAutomaticMode').returns(true)
 
     const fastify = register()
 

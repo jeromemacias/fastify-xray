@@ -42,8 +42,6 @@ function fastifyXrayOnRequest (request, reply, done) {
       ' }'
   )
 
-  request.segment = segment
-
   if (AWSXRay.isAutomaticMode()) {
     var ns = AWSXRay.getNamespace()
     ns.bindEmitter(req)
@@ -52,12 +50,12 @@ function fastifyXrayOnRequest (request, reply, done) {
     ns.run(function () {
       AWSXRay.setSegment(segment)
 
-      done && done()
+      done()
     })
   } else {
-    req.segment = segment
+    request.segment = segment
 
-    done && done()
+    done()
   }
 }
 

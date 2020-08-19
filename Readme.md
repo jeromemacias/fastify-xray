@@ -2,6 +2,13 @@
 
 [![Build Status](https://travis-ci.org/jeromemacias/fastify-xray.svg?branch=master)](https://travis-ci.org/jeromemacias/fastify-xray)
 
+## Requirements
+
+* AWS X-Ray SDK Core (aws-xray-sdk-core)
+* Fastify 2.0.0 or greater
+
+## AWS X-Ray and Fastify
+
 The AWS X-Ray [Fastify](http://fastify.io/) package automatically records information
 for incoming and outgoing requests and responses, via the 'enable' function in this
 package. To configure sampling, dynamic naming, and more see the [set up section](https://github.com/aws/aws-xray-sdk-node/tree/master/packages/core#setup).
@@ -23,9 +30,11 @@ In manual mode, you can get the base segment off of the request object:
 const segment = request.segment;
 ```
 
-This plugin should be register as soon as possible after fastify initialisation.
+This plugin should be register as soon as possible after Fastify initialisation.
 
-## Automatic mode examples
+## Plugin usage
+
+### Automatic mode examples
 
 For more automatic mode examples, see the [example code](https://github.com/aws/aws-xray-sdk-node/tree/master/packages/core#example-code).
 
@@ -39,9 +48,9 @@ fastify.register(require("fastify-xray"), {
 // Error capturing is attached to the fastify onError hook
 ```
 
-## Manual mode examples
+### Manual mode examples
 
-For more manual mode examples, see [manual mode examples for Express](https://github.com/aws/aws-xray-sdk-node/tree/master/packages/express#manual-mode-examples). The X-Ray SDK can be used identically inside Restify routes.
+For more manual mode examples, see [manual mode examples](https://github.com/aws/aws-xray-sdk-node/tree/master/packages/core#Manual-Mode-Examples). The X-Ray SDK can be used identically inside Restify routes. Note that you don't have to manually start or close the segments since that is handled by the X-Ray middleware.
 
 ```js
 const fastify = require("fastify")();
