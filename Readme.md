@@ -1,6 +1,6 @@
 # fastify-xray
 
-[![Build Status](https://travis-ci.org/jeromemacias/fastify-xray.svg?branch=master)](https://travis-ci.org/jeromemacias/fastify-xray)
+[![npm version](https://badge.fury.io/js/fastify-xray.svg)](https://badge.fury.io/js/fastify-xray) [![Build Status](https://travis-ci.org/jeromemacias/fastify-xray.svg?branch=master)](https://travis-ci.org/jeromemacias/fastify-xray)
 
 ## Requirements
 
