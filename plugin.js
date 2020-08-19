@@ -1,35 +1,37 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const AWSXRay = require('aws-xray-sdk-core')
 
-const mwUtils = AWSXRay.middleware
-const IncomingRequestData = mwUtils.IncomingRequestData
-const Segment = AWSXRay.Segment
+function plugin (fastify, options, next) {
+  const AWSXRay = options.AWSXRay || fastify.AWSXRay || require('aws-xray-sdk-core')
 
-function fastifyXrayOnRequest (request, reply, done) {
-  const req = request.raw
-  const res = reply.res
-  res.req = req
-  res.header = {}
+  const mwUtils = AWSXRay.middleware
+  const IncomingRequestData = mwUtils.IncomingRequestData
+  const Segment = AWSXRay.Segment
 
-  const amznTraceHeader = mwUtils.processHeaders(req)
-  const name = mwUtils.resolveName(req.headers.host)
-  const segment = new Segment(
-    name,
-    amznTraceHeader.Root || amznTraceHeader.root,
-    amznTraceHeader.Parent || amznTraceHeader.parent
-  )
+  function fastifyXrayOnRequest (request, reply, done) {
+    const req = request.raw
+    const res = reply.res
+    res.req = req
+    res.header = {}
 
-  mwUtils.resolveSampling(amznTraceHeader, segment, res)
-  segment.addIncomingRequestData(new IncomingRequestData(req))
+    const amznTraceHeader = mwUtils.processHeaders(req)
+    const name = mwUtils.resolveName(req.headers.host)
+    const segment = new Segment(
+      name,
+      amznTraceHeader.Root || amznTraceHeader.root,
+      amznTraceHeader.Parent || amznTraceHeader.parent
+    )
 
-  for (const headerKey in res.header) {
-    reply.header(headerKey, res.header[headerKey])
-  }
+    mwUtils.resolveSampling(amznTraceHeader, segment, res)
+    segment.addIncomingRequestData(new IncomingRequestData(req))
 
-  AWSXRay.getLogger().debug(
-    'Starting Fastify segment: { url: ' +
+    for (const headerKey in res.header) {
+      reply.header(headerKey, res.header[headerKey])
+    }
+
+    AWSXRay.getLogger().debug(
+      'Starting Fastify segment: { url: ' +
       req.url +
       ', name: ' +
       segment.name +
@@ -40,57 +42,57 @@ function fastifyXrayOnRequest (request, reply, done) {
       ', sampled: ' +
       !segment.notTraced +
       ' }'
-  )
+    )
 
-  if (AWSXRay.isAutomaticMode()) {
-    var ns = AWSXRay.getNamespace()
-    ns.bindEmitter(req)
-    ns.bindEmitter(res)
+    if (AWSXRay.isAutomaticMode()) {
+      var ns = AWSXRay.getNamespace()
+      ns.bindEmitter(req)
+      ns.bindEmitter(res)
 
-    ns.run(function () {
-      AWSXRay.setSegment(segment)
+      ns.run(function () {
+        AWSXRay.setSegment(segment)
+
+        done()
+      })
+    } else {
+      request.segment = segment
 
       done()
-    })
-  } else {
-    request.segment = segment
+    }
+  }
+
+  function fastifyXrayOnError (request, reply, error, done) {
+    const segment = AWSXRay.resolveSegment(request.segment)
+
+    if (segment && error) {
+      segment.addError(error)
+    }
 
     done()
   }
-}
 
-function fastifyXrayOnError (request, reply, error, done) {
-  const segment = AWSXRay.resolveSegment(request.segment)
+  function fastifyXrayOnResponse (request, reply, done) {
+    const segment = AWSXRay.resolveSegment(request.segment)
+    if (!segment || segment.isClosed()) {
+      return done()
+    }
 
-  if (segment && error) {
-    segment.addError(error)
-  }
+    if (reply.statusCode === 429) {
+      segment.addThrottleFlag()
+    }
 
-  done()
-}
+    const cause = AWSXRay.utils.getCauseTypeFromHttpStatus(reply.statusCode)
+    if (cause) {
+      segment[cause] = true
+    }
 
-function fastifyXrayOnResponse (request, reply, done) {
-  const segment = AWSXRay.resolveSegment(request.segment)
-  if (!segment || segment.isClosed()) {
-    return done()
-  }
+    if (segment.http && reply.res) {
+      segment.http.close(reply.res)
+    }
+    segment.close()
 
-  if (reply.statusCode === 429) {
-    segment.addThrottleFlag()
-  }
-
-  const cause = AWSXRay.utils.getCauseTypeFromHttpStatus(reply.statusCode)
-  if (cause) {
-    segment[cause] = true
-  }
-
-  if (segment.http && reply.res) {
-    segment.http.close(reply.res)
-  }
-  segment.close()
-
-  AWSXRay.getLogger().debug(
-    'Closed Fastify segment successfully: { url: ' +
+    AWSXRay.getLogger().debug(
+      'Closed Fastify segment successfully: { url: ' +
       request.raw.url +
       ', name: ' +
       segment.name +
@@ -101,12 +103,11 @@ function fastifyXrayOnResponse (request, reply, done) {
       ', sampled: ' +
       !segment.notTraced +
       ' }'
-  )
+    )
 
-  done()
-}
+    done()
+  }
 
-function plugin (fastify, options, next) {
   const { defaultName } = options
 
   if (!defaultName || typeof defaultName !== 'string') {

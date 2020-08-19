@@ -72,6 +72,39 @@ fastify.get("/", async function (request, reply) {
 // Error capturing is attached to the fastify onError hook
 ```
 
+### Give your own AWSXRay instance
+
+In case you need to use your own, already configured, AWSRay instance, here is two possibilities.
+
+By passing the AWSXRay instance as plugin option:
+
+```js
+const AWSXRay = require('aws-xray-sdk-core')
+const fastify = require("fastify")();
+
+// ... configure your AWSXRay instance
+
+fastify.register(require("fastify-xray"), {
+  defaultName: "My App Name",
+  AWSXRay
+});
+```
+
+By decorating the Fastify instance with the AWSXRay instance:
+
+```js
+const AWSXRay = require('aws-xray-sdk-core')
+const fastify = require("fastify")();
+
+// ... configure your AWSXRay instance
+
+instance.decorate('AWSXRay', AWSXRay)
+
+fastify.register(require("fastify-xray"), {
+  defaultName: "My App Name",
+});
+```
+
 ## License
 
 [MIT License](LICENSE.md)
