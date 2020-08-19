@@ -1,6 +1,6 @@
 {
   "name": "fastify-xray",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Fastify plugin for AWS XRay recording",
   "main": "plugin.js",
   "types": "plugin.d.ts",
