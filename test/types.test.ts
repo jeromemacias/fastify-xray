@@ -10,7 +10,7 @@ appWithImplicitHttp
   })
   .after(() => {
     appWithImplicitHttp.get("/", (request) => {
-      const segment = request.XRaySegment;
+      const segment = request.segment;
 
       segment && segment.addMetadata("test", "meta");
     });
@@ -24,7 +24,7 @@ const appWithHttp2: fastify.FastifyInstance<
 
 appWithHttp2.register(xray).after(() => {
   appWithHttp2.get("/", (request) => {
-    const segment = request.XRaySegment;
+    const segment = request.segment;
 
     segment && segment.addMetadata("test", "meta");
   });

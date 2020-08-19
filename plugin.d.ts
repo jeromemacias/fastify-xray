@@ -18,7 +18,7 @@ declare module "fastify" {
     /**
      * Request XRay Segment
      */
-    XRaySegment?: AWSXRay.Segment;
+    segment?: AWSXRay.Segment;
   }
 }
 
