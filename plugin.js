@@ -77,11 +77,13 @@ function plugin (fastify, options, next) {
       return done()
     }
 
-    if (reply.statusCode === 429) {
+    const statusCode = reply.statusCode || reply.res.statusCode
+
+    if (statusCode === 429) {
       segment.addThrottleFlag()
     }
 
-    const cause = AWSXRay.utils.getCauseTypeFromHttpStatus(reply.statusCode)
+    const cause = AWSXRay.utils.getCauseTypeFromHttpStatus(statusCode)
     if (cause) {
       segment[cause] = true
     }
