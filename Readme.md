@@ -98,7 +98,7 @@ const fastify = require("fastify")();
 
 // ... configure your AWSXRay instance
 
-instance.decorate('AWSXRay', AWSXRay)
+fastify.decorate('AWSXRay', AWSXRay)
 
 fastify.register(require("fastify-xray"), {
   defaultName: "My App Name",
