@@ -5,7 +5,7 @@
 ## Requirements
 
 * AWS X-Ray SDK Core (aws-xray-sdk-core)
-* Fastify 2.0.0 or greater
+* Fastify 3.0.0 or greater
 
 ## AWS X-Ray and Fastify
 
