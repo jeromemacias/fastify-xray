@@ -2,15 +2,8 @@ language: node_js
 
 node_js:
   - "10"
-  - "lts/*"
-  - "node"
-
-env:
-  - FASTIFY_VERSION=^2.0.0
-  - FASTIFY_VERSION=2.9.0
-
-before_script:
-  - npm i --no-save fastify@$FASTIFY_VERSION
+  - "12"
+  - "14"
 
 script:
   - npm run lint-ci

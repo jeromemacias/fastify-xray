@@ -4,8 +4,8 @@ const test = require('tap').test
 const xray = require('aws-xray-sdk-core')
 const Fastify = require('fastify')
 const sinon = require('sinon')
-var EventEmitter = require('events')
-var util = require('util')
+const EventEmitter = require('events')
+const util = require('util')
 const plugin = require('../plugin')
 
 const SegmentEmitter = require('aws-xray-sdk-core/lib/segment_emitter')
@@ -15,7 +15,7 @@ const mwUtils = xray.middleware
 const IncomingRequestData = xray.middleware.IncomingRequestData
 const Segment = xray.Segment
 
-var TestUtils = {}
+const TestUtils = {}
 
 TestUtils.TestEmitter = function TestEmitter () {
   EventEmitter.call(this)
@@ -41,8 +41,8 @@ function register (AWSXRay, giveInstanceAs) {
     request.raw.on = TestUtils.onEvent
     request.raw.headers = { host: hostName }
 
-    reply.res.emitter = new TestUtils.TestEmitter()
-    reply.res.on = TestUtils.onEvent
+    reply.raw.emitter = new TestUtils.TestEmitter()
+    reply.raw.on = TestUtils.onEvent
 
     done()
   })
