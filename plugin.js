@@ -11,7 +11,7 @@ function plugin (fastify, options, next) {
 
   function fastifyXrayOnRequest (request, reply, done) {
     const req = request.raw
-    const res = reply.res
+    const res = reply.raw
     res.req = req
     res.header = {}
 
@@ -45,7 +45,7 @@ function plugin (fastify, options, next) {
     )
 
     if (AWSXRay.isAutomaticMode()) {
-      var ns = AWSXRay.getNamespace()
+      const ns = AWSXRay.getNamespace()
       ns.bindEmitter(req)
       ns.bindEmitter(res)
 
@@ -88,8 +88,8 @@ function plugin (fastify, options, next) {
       segment[cause] = true
     }
 
-    if (segment.http && reply.res) {
-      segment.http.close(reply.res)
+    if (segment.http && reply.raw) {
+      segment.http.close(reply.raw)
     }
     segment.close()
 
@@ -132,6 +132,6 @@ function plugin (fastify, options, next) {
 }
 
 module.exports = fp(plugin, {
-  fastify: '>=2.0.0',
+  fastify: '>=3.0.0',
   name: 'fastify-xray'
 })
