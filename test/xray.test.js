@@ -8,8 +8,8 @@ const EventEmitter = require('events')
 const util = require('util')
 const plugin = require('../plugin')
 
-const SegmentEmitter = require('aws-xray-sdk-core/lib/segment_emitter')
-const ServiceConnector = require('aws-xray-sdk-core/lib/middleware/sampling/service_connector')
+const SegmentEmitter = require('aws-xray-sdk-core/dist/lib/segment_emitter')
+const ServiceConnector = require('aws-xray-sdk-core/dist/lib/middleware/sampling/service_connector')
 
 const mwUtils = xray.middleware
 const IncomingRequestData = xray.middleware.IncomingRequestData
