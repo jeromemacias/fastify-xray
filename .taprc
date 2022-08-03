@@ -1,0 +1,7 @@
+jsx: false
+ts: false
+flow: false
+coverage: false
+jobs: 1
+files:
+  - 'test/**/*.test.js'
