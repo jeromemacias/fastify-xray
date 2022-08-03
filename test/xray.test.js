@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const { test } = require('tap')
 const xray = require('aws-xray-sdk-core')
 const Fastify = require('fastify')
 const sinon = require('sinon')
@@ -82,7 +82,7 @@ test('should throw error if defaultName option is missing', async (t) => {
 test('should initialized correctly', (t) => {
   t.plan(6)
 
-  t.beforeEach((done) => {
+  t.beforeEach(() => {
     sinon.stub(SegmentEmitter)
     sinon.stub(ServiceConnector)
 
@@ -99,15 +99,11 @@ test('should initialized correctly', (t) => {
       .stub(mwUtils, 'processHeaders')
       .returns({ root: traceId, parent: parentId, sampled: '1' })
     resolveNameStub = sinon.stub(mwUtils, 'resolveName').returns(defaultName)
-
-    done()
   })
 
-  t.afterEach((done) => {
+  t.afterEach(() => {
     sinon.restore()
     delete process.env.AWS_XRAY_TRACING_NAME
-
-    done()
   })
 
   t.test('success tracing in automatic mode', (st) => {

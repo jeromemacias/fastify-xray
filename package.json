@@ -5,11 +5,10 @@
   "main": "plugin.js",
   "types": "plugin.d.ts",
   "scripts": {
-    "test-local": "tap test/*.test.js && npm run typescript",
-    "test": "tap --cov test/*.test.js && npm run typescript",
-    "lint-local": "standard | snazzy",
-    "lint": "standard",
-    "typescript": "tsc --project ./tsconfig.json"
+    "lint": "standard | snazzy",
+    "test": "npm run test:unit && npm run test:typescript",
+    "test:unit": "tap",
+    "test:typescript": "tsd"
   },
   "precommit": [
     "lint",
@@ -24,7 +23,7 @@
   ],
   "keywords": [
     "fastify",
-    "cookie"
+    "xray"
   ],
   "author": "Jérôme Macias <jerome.macias@gmail.com>",
   "license": "MIT",
@@ -33,17 +32,17 @@
   },
   "homepage": "https://github.com/jeromemacias/fastify-xray#readme",
   "devDependencies": {
-    "@types/node": "^14.14.35",
-    "fastify": "^3.14.0",
-    "pre-commit": "^1.2.2",
+    "@types/node": "^16.11.47",
+    "fastify": "^4.0.0",
+    "@fastify/pre-commit": "^2.0.2",
     "sinon": "~9.0.2",
     "snazzy": "^9.0.0",
-    "standard": "^16.0.3",
-    "tap": "^14.11.0",
-    "typescript": "^4.2.3"
+    "standard": "^17.0.0",
+    "tap": "^16.3.0",
+    "tsd": "^0.22.0"
   },
   "dependencies": {
-    "aws-xray-sdk-core": "^3.2.0",
-    "fastify-plugin": "^3.0.0"
+    "aws-xray-sdk-core": "^3.3.0",
+    "fastify-plugin": "^4.0.0"
   }
 }

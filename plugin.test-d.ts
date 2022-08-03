@@ -1,5 +1,5 @@
 import fastify from 'fastify'
-import xray from '../'
+import xray from './'
 import AWSXRay from 'aws-xray-sdk-core'
 
 const appWithImplicitHttp = fastify()
