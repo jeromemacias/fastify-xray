@@ -5,10 +5,10 @@
   "main": "plugin.js",
   "types": "plugin.d.ts",
   "scripts": {
-    "test": "tap test/*.test.js && npm run typescript",
-    "test-ci": "tap --cov test/*.test.js && npm run typescript",
-    "lint": "standard | snazzy",
-    "lint-ci": "standard",
+    "test-local": "tap test/*.test.js && npm run typescript",
+    "test": "tap --cov test/*.test.js && npm run typescript",
+    "lint-local": "standard | snazzy",
+    "lint": "standard",
     "typescript": "tsc --project ./tsconfig.json"
   },
   "precommit": [
